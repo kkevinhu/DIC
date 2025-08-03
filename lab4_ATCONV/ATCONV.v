@@ -66,12 +66,6 @@ always @(*) begin
     case (state)
         READ : image[iaddr] <= idata;
         layer0_WR : layer0_D <= (mul[31]) ? 16'd0 : mul[19:4];
-        layer1_RD : begin
-            if (p_counter == 0)
-                max <= layer0_Q;
-            else
-                max <= (max > layer0_Q) ? max : layer0_Q;
-        end
         layer1_WR : layer1_D <= (|max[3:0]) ? {max[15:4] + 16'b1, 4'b0} : max;
     endcase
 end
@@ -208,6 +202,17 @@ always @(posedge clk or posedge rst) begin
     end
 end
 
+always @(*) begin
+    if (state == layer1_RD) begin
+            if (p_counter == 0 || p_counter == 1)
+                max <= 16'd0;
+            else
+            max <= (max > layer0_Q) ? max : layer0_Q;
+    end
+    else
+        max <= max;
+end
+
 // output signal
 always @(*) begin
     case (state)
@@ -262,18 +267,3 @@ always @(*) begin
     endcase
 end
 endmodule
-
-/*
-ROM_rd
-layer0_ceb
-layer0_web
-layer1_ceb
-layer1_web
-done
-*/
-
-
-/*
-problem occur when layer1_A = 17 ...
-due to it's max is layer_A = 16 's
-*/
